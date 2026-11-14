@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0f172a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>FireClass Pro — Diagnostic Famille d'Habitation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+body {
+background-color: #0f172a;
+color: #f8fafc;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+-webkit-tap-highlight-color: transparent;
+}
+.glass-card {
+background: rgba(30, 41, 59, 0.85);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(148, 163, 184, 0.15);
+}
+</style>
+</head>
+<body class="min-h-screen flex flex-col pb-24">
+
+<!-- Header -->
+<header class="sticky top-0 z-30 bg-slate-950/90 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center shadow-lg shadow-red-900/40">
+<i data-lucide="flame" class="w-5 h-5 text-white"></i>
+</div>
+<div>
+<h1 class="font-bold text-base tracking-tight text-white leading-none">FireClass Pro</h1>
+<p class="text-[11px] text-slate-400 mt-0.5">Arrêté 31/01/1986 & IGH</p>
+</div>
+</div>
+<button id="btn-install" class="hidden text-xs bg-red-600 hover:bg-red-500 text-white font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+<i data-lucide="download" class="w-3.5 h-3.5"></i> Installer
+</button>
+</header>
+
+<!-- Main Content -->
+<main class="flex-1 max-w-lg w-full mx-auto px-4 pt-4">
+
+<!-- TAB 1: DIAGNOSTIC -->
+<section id="tab-scan" class="space-y-4">
+
+<!-- Capture Zone -->
+<div class="glass-card rounded-2xl p-5 text-center space-y-4 shadow-xl">
+<div id="preview-container" class="hidden relative rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+<img id="image-preview" src="" alt="Bâtiment" class="w-full max-h-64 object-cover" />
+<button onclick="resetScan()" class="absolute top-2 right-2 bg-slate-950/80 text-white p-1.5 rounded-full hover:bg-red-600 transition">
+<i data-lucide="x" class="w-4 h-4"></i>
+</button>
+</div>
+
+<div id="capture-placeholder" class="py-4 space-y-2">
+<div class="w-16 h-16 mx-auto rounded-2xl bg-slate-800/90 border border-slate-700 flex items-center justify-center text-red-500 mb-3">
+<i data-lucide="building-2" class="w-8 h-8"></i>
+</div>
+<h2 class="text-lg font-semibold text-white">Identifier un bâtiment</h2>
+<p class="text-xs text-slate-400 max-w-xs mx-auto">
+Prenez la façade complète en photo (du sol jusqu'à la toiture) pour déterminer sa famille d'habitation.
+</p>
+</div>
+
+<div class="grid grid-cols-2 gap-3">
+<label class="col-span-2 cursor-pointer bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 active:scale-[0.99] transition text-white font-semibold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-950/50">
+<i data-lucide="camera" class="w-5 h-5"></i>
+<span>Prendre en photo</span>
+<input type="file" id="camera-input" accept="image/" capture="environment" class="hidden" onchange="handleImageUpload(event)" />
+</label>
+<label class="col-span-2 cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 border border-slate-700 transition">
+<i data-lucide="image" class="w-4 h-4 text-slate-400"></i>
+<span>Importer depuis la galerie</span>
+<input type="file" id="gallery-input" accept="image/" class="hidden" onchange="handleImageUpload(event)" />
+</label>
+</div>
+</div>
+
+<!-- Assistant Terrain / Comptage Niveaux -->
+<div class="glass-card rounded-2xl p-4 space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+<i data-lucide="sliders" class="w-4 h-4 text-orange-400"></i>
+Paramètres du bâtiment relevés
+</h3>
+<span class="text-[11px] text-slate-400">Calcul instantané</span>
+</div>
+
+<!-- Type de bâtiment -->
+<div class="space-y-1.5">
+<label class="text-xs text-slate-400">Typologie d'habitation</label>
+<div class="grid grid-cols-2 gap-2">
+<button type="button" onclick="setType('individuel')" id="btn-type-individuel" class="type-btn py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 bg-red-600/20 border-red-500 text-white">
+<i data-lucide="home" class="w-4 h-4"></i> Maison individuelle
+</button>
+<button type="button" onclick="setType('collectif')" id="btn-type-collectif" class="type-btn py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 bg-slate-800/70 border-slate-700 text-slate-300">
+<i data-lucide="building" class="w-4 h-4"></i> Habitat collectif
+</button>
+</div>
+</div>
+
+<!-- Nombre d'étages -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Niveaux au-dessus du RDC (R+N)</span>
+<span id="levels-display" class="font-bold text-orange-400">R+1 (2 niveaux)</span>
+</div>
+<input type="range" id="levels-slider" min="0" max="20" value="1" oninput="updateCalculation()" class="w-full accent-red-500 bg-slate-800 h-2 rounded-lg cursor-pointer" />
+<div class="flex justify-between text-[10px] text-slate-500">
+<span>Plain-pied (RDC)</span>
+<span>R+3 (~8m)</span>
+<span>R+9 (~28m)</span>
+<span>R+18+ (>50m)</span>
+</div>
+</div>
+
+<!-- Voie échelle (affiché pour 3ème famille) -->
+<div id="voie-echelle-box" class="hidden pt-2 border-t border-slate-700/70 space-y-2">
+<label class="text-xs font-medium text-amber-300 flex items-center gap-1.5">
+<i data-lucide="truck" class="w-4 h-4"></i>
+Accès voie échelle (3ème Famille A ou B) :
+</label>
+<div class="grid grid-cols-2 gap-2">
+<button type="button" onclick="setVoieEchelle(true)" id="btn-ve-yes" class="py-2 px-2.5 rounded-lg border text-xs font-medium bg-emerald-600/20 border-emerald-500 text-emerald-200">
+Oui (Accessible 3A)
+</button>
+<button type="button" onclick="setVoieEchelle(false)" id="btn-ve-no" class="py-2 px-2.5 rounded-lg border text-xs font-medium bg-slate-800 border-slate-700 text-slate-300">
+Non / > R+7 (3B)
+</button>
+</div>
+</div>
+</div>
+
+<!-- Résultat Réglementaire -->
+<div id="result-card" class="glass-card rounded-2xl p-5 border-l-4 border-l-red-500 space-y-3 shadow-xl">
+<div class="flex items-start justify-between gap-2">
+<div>
+<span id="res-badge" class="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+1ÈRE FAMILLE
+</span>
+<h2 id="res-title" class="text-xl font-extrabold text-white mt-1.5">SOLO (R+1 max)</h2>
+<p id="res-height" class="text-xs text-slate-400">Hauteur plancher bas dernier logement : < 8 m</p>
+</div>
+<div id="res-icon-box" class="w-12 h-12 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
+<i data-lucide="shield-check" class="w-6 h-6"></i>
+</div>
+</div>
+
+<div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-2">
+<p class="text-xs font-semibold text-slate-300 uppercase tracking-wide">Prescriptions & Équipements clés :</p>
+<ul id="res-equipments" class="text-xs text-slate-300 space-y-1.5">
+<!-- Rempli dynamiquement -->
+</ul>
+</div>
+
+<div class="flex gap-2 pt-1">
+<button onclick="saveToHistory()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 transition">
+<i data-lucide="bookmark-plus" class="w-4 h-4 text-orange-400"></i> Enregistrer le relevé
+</button>
+<button onclick="copyReport()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 transition">
+<i data-lucide="copy" class="w-4 h-4"></i> Copier
+</button>
+</div>
+</div>
+
+</section>
+
+<!-- TAB 2: MÉMO VISUEL -->
+<section id="tab-memo" class="hidden space-y-4">
+<div class="glass-card rounded-2xl p-4 space-y-3">
+<div class="flex items-center gap-2 text-amber-400">
+<i data-lucide="lightbulb" class="w-5 h-5"></i>
+<h2 class="font-bold text-base text-white">L'Astuce Mémo (1 - 2 - 3 - 4)</h2>
+</div>
+<div class="grid grid-cols-2 gap-2.5 text-xs">
+<div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+<span class="text-red-400 font-extrabold text-sm">1 = Solo</span>
+<p class="text-slate-300 mt-0.5">Maison individuelle (R+1 max)</p>
+</div>
+<div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+<span class="text-orange-400 font-extrabold text-sm">2 = Petit (≤ 8 m)</span>
+<p class="text-slate-300 mt-0.5">Petit collectif ou maison > R+1 (R+3 max)</p>
+</div>
+<div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+<span class="text-amber-400 font-extrabold text-sm">3 = Moyen (≤ 28 m)</span>
+<p class="text-slate-300 mt-0.5">3A : Voie échelle<br/>3B : Colonne sèche</p>
+</div>
+<div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+<span class="text-rose-500 font-extrabold text-sm">4 = Grand (28 à 50 m)</span>
+<p class="text-slate-300 mt-0.5">Grand collectif + SAS + Colonne sèche</p>
+</div>
+</div>
+<div class="bg-red-950/40 border border-red-800/50 rounded-xl p-3 text-xs text-red-200 flex items-center justify-between">
+<span><strong>IGH (Immeuble de Grande Hauteur)</strong></span>
+<span class="font-bold bg-red-600 text-white px-2 py-0.5 rounded">> 50 m</span>
+</div>
+</div>
+
+<div class="glass-card rounded-2xl p-4 space-y-3 text-xs text-slate-300">
+<h3 class="font-bold text-sm text-white">Règles de mesure (Arrêté 31 janv. 1986)</h3>
+<p>• La hauteur de référence se mesure entre le <strong>niveau du sol accessible aux engins de secours</strong> et le <strong>plancher bas du logement le plus haut</strong>.</p>
+<p>• En moyenne, compter environ <strong>2,80 m à 3,00 m par niveau</strong> (R+3 ≈ 8,40 m ; R+9 ≈ 27 m).</p>
+<p>• <strong>3ème Famille A :</strong> R+7 maximum, distance ≤ 7 m entre l'accès escalier et la voie échelle.</p>
+<p>• <strong>3ème Famille B :</strong> Dès que l'une des conditions 3A n'est pas remplie (≤ 28 m) → Colonne sèche obligatoire.</p>
+</div>
+</section>
+
+<!-- TAB 3: HISTORIQUE -->
+<section id="tab-history" class="hidden space-y-3">
+<div class="flex items-center justify-between">
+<h2 class="font-bold text-base text-white">Relevés enregistrés</h2>
+<button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-red-400">Tout effacer</button>
+</div>
+<div id="history-list" class="space-y-3">
+<!-- Liste dynamique -->
+</div>
+</section>
+
+</main>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-2xl border border-slate-700 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+Action effectuée
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 inset-x-0 bg-slate-950/95 backdrop-blur border-t border-slate-800 z-30">
+<div class="max-w-lg mx-auto grid grid-cols-3 h-16">
+<button onclick="switchTab('scan')" id="nav-scan" class="flex flex-col items-center justify-center gap-1 text-red-500 font-semibold text-xs">
+<i data-lucide="scan-line" class="w-5 h-5"></i>
+<span>Diagnostic</span>
+</button>
+<button onclick="switchTab('memo')" id="nav-memo" class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 text-xs">
+<i data-lucide="book-open" class="w-5 h-5"></i>
+<span>Mémo 1-4</span>
+</button>
+<button onclick="switchTab('history')" id="nav-history" class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 text-xs">
+<i data-lucide="history" class="w-5 h-5"></i>
+<span>Historique</span>
+</button>
+</div>
+</nav>
+
+<script>
+lucide.createIcons();
+
+let buildingType = 'individuel';
+let voieEchelle = true;
+let currentImageBase64 = null;
+
+function showToast(msg) {
+const t = document.getElementById('toast');
+t.textContent = msg;
+t.classList.remove('opacity-0');
+setTimeout(() => t.classList.add('opacity-0'), 2400);
+}
+
+function switchTab(tab) {
+['scan', 'memo', 'history'].forEach(id => {
+document.getElementById('tab-' + id).classList.toggle('hidden', id !== tab);
+const nav = document.getElementById('nav-' + id);
+if (id === tab) {
+nav.classList.add('text-red-500', 'font-semibold');
+nav.classList.remove('text-slate-400');
+} else {
+nav.classList.remove('text-red-500', 'font-semibold');
+nav.classList.add('text-slate-400');
+}
+});
+if (tab === 'history') renderHistory();
+}
+
+function handleImageUpload(event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(e) {
+const img = new Image();
+img.onload = function() {
+const canvas = document.createElement('canvas');
+const maxW = 800;
+const scale = Math.min(1, maxW / img.width);
+canvas.width = img.width * scale;
+canvas.height = img.height * scale;
+const ctx = canvas.getContext('2d');
+ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+currentImageBase64 = canvas.toDataURL('image/jpeg', 0.75);
+document.getElementById('image-preview').src = currentImageBase64;
+document.getElementById('preview-container').classList.remove('hidden');
+document.getElementById('capture-placeholder').classList.add('hidden');
+showToast('Photo chargée — Ajustez les niveaux ci-dessous');
+};
+img.src = e.target.result;
+};
+reader.readAsDataURL(file);
+}
+
+function resetScan() {
+currentImageBase64 = null;
+document.getElementById('preview-container').classList.add('hidden');
+document.getElementById('capture-placeholder').classList.remove('hidden');
+document.getElementById('camera-input').value = '';
+document.getElementById('gallery-input').value = '';
+}
+
+function setType(type) {
+buildingType = type;
+const btnInd = document.getElementById('btn-type-individuel');
+const btnCol = document.getElementById('btn-type-collectif');
+if (type === 'individuel') {
+btnInd.className = 'type-btn py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 bg-red-600/20 border-red-500 text-white';
+btnCol.className = 'type-btn py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 bg-slate-800/70 border-slate-700 text-slate-300';
+} else {
+btnCol.className = 'type-btn py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 bg-red-600/20 border-red-500 text-white';
+btnInd.className = 'type-btn py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 bg-slate-800/70 border-slate-700 text-slate-300';
+}
+updateCalculation();
+}
+
+function setVoieEchelle(val) {
+voieEchelle = val;
+document.getElementById('btn-ve-yes').className = val
+? 'py-2 px-2.5 rounded-lg border text-xs font-medium bg-emerald-600/20 border-emerald-500 text-emerald-200'
+: 'py-2 px-2.5 rounded-lg border text-xs font-medium bg-slate-800 border-slate-700 text-slate-300';
+document.getElementById('btn-ve-no').className = !val
+? 'py-2 px-2.5 rounded-lg border text-xs font-medium bg-amber-600/20 border-amber-500 text-amber-200'
+: 'py-2 px-2.5 rounded-lg border text-xs font-medium bg-slate-800 border-slate-700 text-slate-300';
+updateCalculation();
+}
+
+function getClassification() {
+const levels = parseInt(document.getElementById('levels-slider').value, 10);
+const estHeight = (levels * 2.8).toFixed(1);
+document.getElementById('levels-display').textContent =
+levels === 0 ? 'Plain-pied (RDC)' : R+${levels} (~${estHeight} m);
+
+const veBox = document.getElementById('voie-echelle-box');
+veBox.classList.add('hidden');
+
+if (levels >= 18 || levels * 2.8 > 50) {
+return {
+badge: 'IGH (> 50 M)',
+title: 'Immeuble de Grande Hauteur (IGH A)',
+height: Plancher bas &gt; 50 m (R+${levels} estimé à ~${estHeight} m),
+equipments: [
+'Réglementation spécifique IGH (Règlement de sécurité)',
+'Compartimentage strict, désenfumage mécanique, SSI catégorie A',
+'Colonnes sèches ou colonnes en charge obligatoires',
+'Service de sécurité incendie permanent (SSIAP)'
+ ]
+};
+}
+
+if (buildingType === 'individuel') {
+if (levels <= 1) {
+return {
+badge: '1ÈRE FAMILLE',
+title: 'SOLO — Maison individuelle',
+height: R+${levels} (R+1 maximum, plancher bas <= 8 m), equipments: [ 'DAAF obligatoire (Détecteur Autonome Avertisseur de Fumée)', 'Stabilité au feu structure : 1/4 d\'heure (15 min)', 'Pas d\'obligation de colonne sèche ni de désenfumage' ] }; } else if (levels &lt;= 3) { return { badge: '2ÈME FAMILLE', title: 'PETIT — Maison individuelle &gt; R+1', height:R+${levels} (Plancher bas &lt;= 8 m),
+equipments: [
+'DAAF obligatoire dans chaque logement',
+'Stabilité au feu structure : 1/2 heure (30 min)',
+'Isolement coupe-feu renforcé entre niveaux / mitoyenneté'
+ ]
+};
+}
+}
+
+// Habitat collectif (ou individuel > R+3)
+if (levels <= 3) {
+return {
+badge: '2ÈME FAMILLE',
+title: 'PETIT COLLECTIF (<= 8 m)',
+height: R+${levels} (Plancher bas dernier logement <= 8 m)`,
+equipments: [
+'DAAF dans chaque logement + Blocs-portes palières pare-flammes 1/2 h',
+'Désenfumage en partie haute de la cage d'escalier (exutoire 1 m²)',
+'Éclairage de sécurité (BAES) selon configuration des circulations',
+'Extincteurs recommandés en chaufferie / parking couvert'
+ ]
+};
+}
+
+if (levels <= 9) {
+veBox.classList.remove('hidden');
+if (voieEchelle && levels <= 7) {
+return {
+badge: '3ÈME FAMILLE A',
+title: 'MOYEN COLLECTIF — Accessible',
+height: R+${levels} (Plancher bas <= 28 m, R+7 max avec voie échelle), equipments: [ 'Accès voie échelle &lt;= 7 m de l\'entrée de la cage d\'escalier', 'Désenfumage naturel ou mécanique de l\'escalier + circulations', 'Pas de colonne sèche obligatoire (sauf disposition locale)', 'BAES dans les circulations communes et cages d\'escalier' ] }; } else { return { badge: '3ÈME FAMILLE B', title: 'MOYEN COLLECTIF — Colonne Sèche', height:R+${levels} (Plancher bas &lt;= 28 m, voie échelle non atteinte),
+equipments: [
+'Colonne sèche obligatoire (DN 65) dans chaque cage d'escalier',
+'Désenfumage mécanique des circulations horizontales protégées',
+'Escalier encloisonné et désenfumé + portes coupe-feu à ferme-porte',
+'BAES + Plan d'intervention dans le hall d'entrée'
+ ]
+};
+}
+}
+
+return {
+badge: '4ÈME FAMILLE',
+title: 'GRAND COLLECTIF (28 à 50 m)',
+height: R+${levels} (Plancher bas entre 28 m et 50 m)`,
+equipments: [
+'SAS d'intercommunication coupe-feu entre circulations et escaliers',
+'Colonne sèche obligatoire (ou colonne en charge si > 50 m)',
+'Désenfumage mécanique obligatoirement asservi à la détection incendie',
+'BAES + Alarme incendie + Consignes et plans d'évacuation'
+ ]
+};
+}
+
+function updateCalculation() {
+const res = getClassification();
+document.getElementById('res-badge').textContent = res.badge;
+document.getElementById('res-title').textContent = res.title;
+document.getElementById('res-height').textContent = res.height;
+const ul = document.getElementById('res-equipments');
+ul.innerHTML = res.equipments.map(item => <li class="flex items-start gap-2"&gt;&lt;span class="text-orange-400 mt-0.5"&gt;&#9679;&lt;/span&gt;&lt;span&gt;${item}</span></li>`).join('');
+}
+
+function saveToHistory() {
+const res = getClassification();
+const history = JSON.parse(localStorage.getItem('fireclass_history') || '[]');
+history.unshift({
+id: Date.now(),
+date: new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+badge: res.badge,
+title: res.title,
+height: res.height,
+image: currentImageBase64
+});
+localStorage.setItem('fireclass_history', JSON.stringify(history.slice(0, 20)));
+showToast('Relevé enregistré dans l'historique');
+}
+
+function copyReport() {
+const res = getClassification();
+const text = DIAGNOSTIC SÉCURITÉ INCENDIE —${res.badge}\nlatex
+{res.title}\n
+
+{res.height}\nPrescriptions :\n- ${res.equipments.join('\n- ')};
+navigator.clipboard.writeText(text).then(() => showToast('Rapport copié dans le presse-papiers'));
+}
+
+function renderHistory() {
+const list = document.getElementById('history-list');
+const history = JSON.parse(localStorage.getItem('fireclass_history') || '[]');
+if (history.length === 0) {
+list.innerHTML = <div class="glass-card rounded-2xl p-6 text-center text-xs text-slate-400"&gt;Aucun bâtiment enregistré pour le moment.&lt;/div>;
+return;
+}
+list.innerHTML = history.map(item => &lt;div class="glass-card rounded-xl p-3 flex items-center gap-3"&gt;${item.image
+? <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover border border-slate-700 shrink-0" />:<div class="w-16 h-16 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 shrink-0"><i data-lucide="building-2" class="w-6 h-6"></i></div>} &lt;div class="flex-1 min-w-0"&gt; &lt;div class="flex items-center justify-between gap-2"&gt; &lt;span class="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300"&gt;${item.badge}</span>
+<span class="text-[10px] text-slate-400">{item.title}</p>
+<p class="text-[11px] text-slate-400 truncate">${item.height}</p>
+</div>
+</div>
+`).join('');
+lucide.createIcons();
+}
+
+function clearHistory() {
+localStorage.removeItem('fireclass_history');
+renderHistory();
+showToast('Historique effacé');
+}
+
+// Init
+updateCalculation();
+</script>
+</body>
+</html>
